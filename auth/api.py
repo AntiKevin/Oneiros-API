@@ -1,6 +1,6 @@
 from django.http import JsonResponse
-from schemas.request_schemas import *
-from schemas.response_schemas import *
+from auth.schemas.request_schemas import *
+from auth.schemas.response_schemas import *
 from ninja import NinjaAPI
 from utils.spotify_auth import create_spotify_oauth
 
