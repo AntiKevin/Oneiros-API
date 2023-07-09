@@ -26,7 +26,7 @@ def create_spotiphoto(request):
     top_artists = [artist['name'] for artist in top_artist_json]
     random_artists = random.sample(top_artists, 3)
     #AI pipeline
-    image_bytes = get_ai_image(f'a character who listens to {random_artists[0]}')
+    image_bytes = get_ai_image(f'a character who listens to {random_artists[0]}, {random_artists[1]} and {random_artists[2]}')
     image = Image.open(io.BytesIO(image_bytes))
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
@@ -36,3 +36,15 @@ def create_spotiphoto(request):
     response["Content-Disposition"] = "attachment; filename=imagem.png"
     
     return response
+ 
+@api.get("/top-artists")
+def top_artists(request):
+    auth_header = request.headers.get("Authorization")
+    token = auth_header[7:]
+    sp = spotipy.Spotify(auth=token)
+    # extracting artists
+    top_artist_json = sp.current_user_top_artists(limit=20, offset=5)['items']
+    top_artists = [{"name":artist['name'], "genres":artist['genres'], "images":artist['images'][1]} for artist in top_artist_json]
+
+    
+    return top_artists
