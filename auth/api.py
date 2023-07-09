@@ -1,37 +1,29 @@
-import os
+from django.http import JsonResponse
+from schemas.request_schemas import *
+from schemas.response_schemas import *
 from ninja import NinjaAPI
-from django.http import HttpResponseRedirect
-from spotipy.oauth2 import SpotifyOAuth
-from dotenv import load_dotenv
-
-env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-
-load_dotenv(dotenv_path=env_path)
+from utils.spotify_auth import create_spotify_oauth
 
 api = NinjaAPI(
    title="Auth API",
-   description="Essa api é dedicada para todos os endpoints de autorização e autenticação"
+   urls_namespace='auth',
+   description="Essa api é dedicada para todos os endpoints de autorização e autenticação",
 )
 
-
-@api.get("/login")
+@api.get("/get-url-login")
 def spotify_login(request):
     sp_oauth = create_spotify_oauth()
     auth_url = sp_oauth.get_authorize_url()
-    return HttpResponseRedirect(auth_url)
-
-@api.get("/redirect")
-def redirect(request, code: str = None):
-    sp_oauth = create_spotify_oauth()
-    request.session.clear()
-    token_info = sp_oauth.get_access_token(code)
-    request.session['token'] = token_info
-    return token_info
+    return {"url":auth_url}
 
 
-def create_spotify_oauth():
-    return SpotifyOAuth(
-            client_id=os.getenv('SPOTIFY_CLIENT_ID'),
-            client_secret=os.getenv('SPOTIFY_SECRET'),
-            redirect_uri=os.getenv('SPOTIFY_REDIRECT_URI'),
-            scope=os.getenv('SPOTIFY_SCOPE'))
+      
+@api.post("/token")
+async def getToken(request, requestBody: TokenSchema):
+    try:
+        sp_oauth = create_spotify_oauth()
+        token_info = sp_oauth.get_access_token(requestBody.code)
+        return token_info
+    except Exception as e:
+        # Erros de validação, retorne um erro 400
+        return JsonResponse({"detail": str(e), "code":requestBody.code}, status=400)
