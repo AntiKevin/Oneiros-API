@@ -27,21 +27,12 @@ def create_spotiphoto(request):
     random_artists = random.sample(top_artists, 3)
     #AI pipeline
     image_bytes = get_ai_image(f'a character who listens to {random_artists[0]}')
-    
     image = Image.open(io.BytesIO(image_bytes))
-    # Crie um buffer de memória para armazenar a imagem
     buffer = io.BytesIO()
-    
-    # Salve a imagem no buffer
     image.save(buffer, format="PNG")
-    
-    # Mova o cursor do buffer para o início
     buffer.seek(0)
-    
-    # Crie uma resposta de streaming a partir do buffer
     response = StreamingHttpResponse(buffer, content_type="image/png")
     
-    # Defina o cabeçalho Content-Disposition para fazer o navegador baixar a imagem em vez de exibi-la
     response["Content-Disposition"] = "attachment; filename=imagem.png"
     
     return response
